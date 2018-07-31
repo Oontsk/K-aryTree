@@ -2,7 +2,7 @@ public abstract class Tree<E> {
 
     protected abstract class TreeNode {
         protected E data;
-        protected int freq;
+        protected int freq = 1;
         protected TreeNode parent;
         @SuppressWarnings("unchecked")
         protected TreeNode[] children = (TreeNode[]) new Object[numKids];
@@ -10,7 +10,6 @@ public abstract class Tree<E> {
         protected TreeNode(E data, TreeNode parent) {
             this.data = data;
             this.parent = parent;
-            this.freq = 1;
         }
 
         protected abstract TreeNode insert(E data);
