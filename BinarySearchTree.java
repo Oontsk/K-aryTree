@@ -31,12 +31,18 @@ public class BinarySearchTree<E> extends Tree<E> {
         }
 
         public TreeNode insert(E data) {
-            int res = BinarySearchTree.this.compare(data, this.data);
-            if (res > 0) {
-                return
-            }
-
+           throw new UnsupportedOperationException();
         }
+
+        public TreeNode delete(E data) {
+            throw new UnsupportedOperationException();
+        }
+
+        public boolean contains(E data) {
+            throw new UnsupportedOperationException();
+        }
+
+
 
     }
 
