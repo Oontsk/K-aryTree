@@ -15,23 +15,36 @@ public abstract class Tree<E> {
             this.children = (TreeNode[]) new Object[numKids];
         }
 
+        protected boolean isLeafNode() {
+            for (int i = 0; i < numKids; ++i) {
+                if (children[i] != null) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
         protected abstract TreeNode insert(E data);
         protected abstract TreeNode remove(E data);
         protected abstract boolean contains(E data);
     }
 
-    protected int size, numKids;
-    protected TreeNode root;
+    protected int size = 0, numKids;
+    protected TreeNode root = null;
     protected Comparator<E> comp;
 
     protected Tree(int numKids, Comparator<E> comp) {
-        this.size = 0;
         this.numKids = numKids;
         this.comp = comp;
     }
 
     public int size() {
         return size;
+    }
+
+    public boolean isEmpty() {
+        return size == 0;
     }
 
     protected int compare(E one, E two) {
@@ -51,9 +64,9 @@ public abstract class Tree<E> {
         return comp.compare(one, two);
     }
 
-
     public abstract void insert(E data);
     public abstract void remove(E data);
     public abstract boolean contains(E data);
-
+    protected abstract void deleteEntry(TreeNode guy);
 }
+

@@ -1,3 +1,6 @@
+import java.util.Comparator;
+import java.util.Random;
+
 public class BinarySearchTree<E> extends Tree<E> {
 
     protected class BinarySearchTreeNode extends TreeNode {
@@ -26,7 +29,6 @@ public class BinarySearchTree<E> extends Tree<E> {
             }
         }
 
-
         protected void setRight(BinarySearchTreeNode setTo) {
             super.children[1] = setTo;
         }
@@ -44,6 +46,11 @@ public class BinarySearchTree<E> extends Tree<E> {
         }
 
     }
+
+    public BinarySearchTree(Comparator<E> comp) {
+        super(2, comp);
+    }
+
 
     protected void rotate(BinarySearchTreeNode guy) {
         BinarySearchTreeNode par;
@@ -95,7 +102,7 @@ public class BinarySearchTree<E> extends Tree<E> {
         }
     }
 
-    public TreeNode insert(E data) {
+    public boolean contains(E data) {
         BinarySearchTreeNode cur;
         try {
             cur = (BinarySearchTreeNode) root;
@@ -103,16 +110,125 @@ public class BinarySearchTree<E> extends Tree<E> {
             cur = null;
         }
 
-        if (cur != null) {
+        while (cur != null) {
             int res = super.compare(data, cur.data);
-            (if res > 0) {
-
+            if (res > 0) {
+                cur = cur.right();
+            } else if (res < 0) {
+                cur = cur.left();
+            } else {
+                return true;
             }
-
         }
-
-
+        return false;
     }
 
 
+    public void insert(E data) {
+        BinarySearchTreeNode cur;
+        try {
+            cur = (BinarySearchTreeNode) root;
+        } catch (ClassCastException e) {
+            cur = null;
+        }
+
+        while (cur != null) {
+            int res = super.compare(data, cur.data);
+            if (res > 0) {
+                BinarySearchTreeNode cursRight = cur.right();
+                if (cursRight != null) {
+                    cur = cursRight;
+                } else {
+                    BinarySearchTreeNode newNode = new BinarySearchTreeNode(data, cur);
+                    cur.setRight(newNode);
+                    ++super.size;
+                }
+            } else if (res < 0) {
+                BinarySearchTreeNode cursLeft = cur.left();
+                if (cursLeft != null) {
+                    cur = cursLeft;
+                } else {
+                    BinarySearchTreeNode newNode = new BinarySearchTreeNode(data, cur);
+                    cur.setLeft(newNode);
+                    ++super.size;
+                }
+            } else { //node already exists in the tree
+               ++cur.freq;
+            }
+        }
+    }
+
+    public void remove(E data) {
+        BinarySearchTreeNode cur;
+        try {
+            cur = (BinarySearchTreeNode) root;
+        } catch (ClassCastException e) {
+            cur = null;
+        }
+
+        while (cur != null) {
+            int res = super.compare(data, cur.data);
+            if (res > 0) {
+                cur = cur.right();
+            } else if (res < 0) {
+                cur = cur.left();
+            } else { //found element to remove
+               deleteEntry(cur);
+            }
+        }
+        //if here, no field equal to data
+    }
+
+    protected void deleteEntry(TreeNode guy) {
+        --super.size;
+        if (super.size == 0) {
+            root = null;
+            return;
+        }
+
+        while (!guy.isLeafNode()) {
+            BinarySearchTreeNode guysRight, guysLeft;
+            try {
+                guysRight = (BinarySearchTreeNode) guy;
+            } catch (ClassCastException | NullPointerException e) {
+                guysRight = null;
+            }
+            try {
+                guysLeft = (BinarySearchTreeNode) guy;
+            } catch (ClassCastException | NullPointerException e) {
+                guysLeft = null;
+            }
+
+            if (guysRight != null && guysLeft != null)     {
+                //choose via RNG which sibling with which to rotate
+                Random random = new Random();
+                int leftOrRight = random.nextInt(2); //random number, either 0 or 1
+                if (leftOrRight == 0) {
+                    rotate(guysLeft);
+                } else {
+                    rotate(guysRight);
+                }
+            } else if (guysRight != null) {
+                rotate(guysRight);
+            } else  {
+                rotate(guysLeft);
+            }
+        }
+        //now guy is a leaf, so delete
+        BinarySearchTreeNode guysParent;
+        try {
+            guysParent = (BinarySearchTreeNode) guy.parent;
+            //will have a parent because root case already handled at top
+        } catch (ClassCastException | NullPointerException e) {
+            guysParent = null;
+        }
+
+        if (guysParent != null) { //this is where the delete happens
+            if (guy == guysParent.left()) {
+                guysParent.setLeft(null);
+            } else {
+                guysParent.setRight(null);
+            }
+        }
+    }
 }
