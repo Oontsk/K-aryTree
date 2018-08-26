@@ -7,30 +7,33 @@ public class BinarySearchTree<E> extends Tree<E> {
 
         protected BinarySearchTreeNode(E data, TreeNode parent) {
             super(data, parent);
+            super.children = new Object[2];
         }
 
-        protected BinarySearchTreeNode left() {
+        @SuppressWarnings("unchecked")
+		protected BinarySearchTreeNode left() {
             try {
-                return (BinarySearchTreeNode) super.children[0];
+                return (BinarySearchTreeNode) children[0];
             } catch (ClassCastException | NullPointerException e) {
                 return null;
             }
         }
 
         protected void setLeft(BinarySearchTreeNode setTo) {
-            super.children[0] = setTo;
+        	children[0] = setTo;
         }
 
-        protected BinarySearchTreeNode right() {
+        @SuppressWarnings("unchecked")
+		protected BinarySearchTreeNode right() {
             try {
-                return (BinarySearchTreeNode) super.children[1];
+                return (BinarySearchTreeNode) children[1];
             } catch (ClassCastException | NullPointerException e) {
                 return null;
             }
         }
 
         protected void setRight(BinarySearchTreeNode setTo) {
-            super.children[1] = setTo;
+            children[1] = setTo;
         }
         /*
         * Insert, remove, and contains handled
@@ -49,16 +52,15 @@ public class BinarySearchTree<E> extends Tree<E> {
         protected String printTreeNode() {
             return ""; //formatting handled in node superclass for empty string return
         }
-
-
     }
-
+    
     public BinarySearchTree(Comparator<E> comp) {
-        super(2, comp);
+        super(comp);
     }
 
-
-    protected void rotate(BinarySearchTreeNode guy) {
+    //shared rotation function for anything that extends BinarySearchTree
+    @SuppressWarnings("unchecked")
+	protected void rotate(BinarySearchTreeNode guy) {
         BinarySearchTreeNode par;
         try {
             par = (BinarySearchTreeNode) guy.parent;
@@ -67,8 +69,7 @@ public class BinarySearchTree<E> extends Tree<E> {
         }
 
         if (par != null) {
-            BinarySearchTreeNode parsLeft = par.left(),
-                    parsRight = par.right();
+            BinarySearchTreeNode parsLeft = par.left();
             if (parsLeft != null && parsLeft == guy) {
                 BinarySearchTreeNode guysRight = guy.right();
                 par.setLeft(guysRight);
@@ -76,7 +77,7 @@ public class BinarySearchTree<E> extends Tree<E> {
                     guysRight.parent = par;
                 }
                 guy.setRight(par);
-            } else {
+            } else { //parsRight == guy
                 BinarySearchTreeNode guysLeft = guy.left();
                 par.setRight(guysLeft);
                 if (guysLeft != null) {
@@ -98,9 +99,10 @@ public class BinarySearchTree<E> extends Tree<E> {
                 } else {
                     giisan.setRight(guy);
                 }
-                guy.parent = giisan;
-                par.parent = guy;
             }
+
+            par.parent = guy;
+            guy.parent = giisan;
 
             if (par == root) {
                 root = guy;
@@ -108,7 +110,8 @@ public class BinarySearchTree<E> extends Tree<E> {
         }
     }
 
-    public boolean contains(E data) {
+    @SuppressWarnings("unchecked")
+	public boolean contains(E data) {
         BinarySearchTreeNode cur;
         try {
             cur = (BinarySearchTreeNode) root;
@@ -129,8 +132,8 @@ public class BinarySearchTree<E> extends Tree<E> {
         return false;
     }
 
-
-    public void insert(E data) {
+    @SuppressWarnings("unchecked")
+	public void insert(E data) {
         BinarySearchTreeNode cur;
         try {
             cur = (BinarySearchTreeNode) root;
@@ -156,6 +159,7 @@ public class BinarySearchTree<E> extends Tree<E> {
                     cur.setRight(newNode);
                     ++super.numNodes;
                     ++super.numElements;
+                    return;
                 }
             } else if (res < 0) {
                 BinarySearchTreeNode cursLeft = cur.left();
@@ -166,15 +170,18 @@ public class BinarySearchTree<E> extends Tree<E> {
                     cur.setLeft(newNode);
                     ++super.numNodes;
                     ++super.numElements;
+                    return;
                 }
             } else { //node already exists in the tree
                ++cur.freq;
                ++super.numElements;
+               return;
             }
         }
     }
 
-    public void remove(E data) {
+    @SuppressWarnings("unchecked")
+	public void remove(E data) {
         BinarySearchTreeNode cur;
         try {
             cur = (BinarySearchTreeNode) root;
@@ -193,46 +200,41 @@ public class BinarySearchTree<E> extends Tree<E> {
                 --super.numElements;
                 if (cur.freq == 0) {
                     deleteEntry(cur);
+                    return;
                 }
             }
         }
         //if here, no field equal to data
     }
 
-    protected void deleteEntry(TreeNode guy) {
+    @SuppressWarnings("unchecked")
+	protected void deleteEntry(BinarySearchTreeNode guy) {
         --super.numNodes;
         if (super.numNodes == 0) {
             root = null;
             return;
         }
-
-        while (!guy.isLeafNode()) {
-            BinarySearchTreeNode guysRight, guysLeft;
-            try {
-                guysRight = (BinarySearchTreeNode) guy;
-            } catch (ClassCastException | NullPointerException e) {
-                guysRight = null;
-            }
-            try {
-                guysLeft = (BinarySearchTreeNode) guy;
-            } catch (ClassCastException | NullPointerException e) {
-                guysLeft = null;
-            }
-
+        
+        BinarySearchTreeNode guysRight = guy.right(), guysLeft = guy.left();
+        
+        while (!(guysRight == null && guysLeft == null)) {
             if (guysRight != null && guysLeft != null)  {
                 //choose via RNG which sibling with which to rotate
                 Random random = new Random();
-                int leftOrRight = random.nextInt(2); //random number, either 0 or 1
-                if (leftOrRight == 0) {
-                    rotate(guysLeft);
-                } else {
-                    rotate(guysRight);
+                switch (random.nextInt(2)) { //Random number 0 or 1
+                case 0:
+                	rotate(guysLeft);
+                	break;
+                default:
+                	rotate(guysRight);
                 }
             } else if (guysRight != null) {
                 rotate(guysRight);
             } else  {
                 rotate(guysLeft);
             }
+            guysRight = guy.right();
+            guysLeft = guy.left();
         }
         //now guy is a leaf, so delete
         BinarySearchTreeNode guysParent;
@@ -252,43 +254,33 @@ public class BinarySearchTree<E> extends Tree<E> {
         }
     }
 
-    protected String printTree() {
-        String res = "";
-
-        BinarySearchTreeNode cur;
+    @SuppressWarnings("unchecked")
+	protected String printTree() {
         try {
-            cur = (BinarySearchTreeNode) root;
+        	return printTreeHelper((BinarySearchTreeNode) root, 0);
         } catch (ClassCastException | NullPointerException e) {
-            cur = null;
+        	return "";
         }
-
-        if (cur != null) {
-            res += printTreeHelper(cur, 0);
-        }
-
-        return res;
     }
 
-    private String printTreeHelper(BinarySearchTreeNode cur, int depth) {
+    protected String printTreeHelper(BinarySearchTreeNode cur, int depth) {
         String res = "";
 
-        if (cur != null) {
-            for (int i = 0; i < depth; ++i) {
-                res += "  ";
-            }
-            res += cur.toString();
-
-            BinarySearchTreeNode cursLeft = cur.left(), cursRight = cur.right();
-            if (cursLeft != null) {
-                res += printTreeHelper(cursLeft, depth + 1);
-            }
-            if (cursRight != null) {
-                res += printTreeHelper(cursRight, depth + 1);
-            }
+        for (int i = 0; i < depth; ++i) {
+           res += "  ";
+        }
+        
+        if (cur == null) {
+        	res += "<empty>\n";
+        	return res;
         }
 
+        res += cur.toString();
+        
+        BinarySearchTreeNode cursLeft = cur.left(), cursRight = cur.right();
+        res += printTreeHelper(cursLeft, depth + 1);
+        res += printTreeHelper(cursRight, depth + 1);
+        
         return res;
     }
-
-
 }
